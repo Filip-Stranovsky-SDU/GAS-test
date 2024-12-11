@@ -1,1 +1,2 @@
-IDI_MYICON ICON "my_icon.ico"
+IDI_MYICON ICON "Graphics/my_icon.ico"
+IDC_ARROW CURSOR "Graphics/arrow_i.cur"

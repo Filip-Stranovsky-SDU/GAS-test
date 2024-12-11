@@ -95,6 +95,8 @@ szClassName:
     .asciz "MyWindowClass"   # Class name as a null-terminated string
 iconName:
     .asciz "IDI_MYICON"
+cursorName:
+    .asciz "IDC_ARROW"
 
     .section .bss
     .lcomm wc, 80            # Allocate 80 bytes for the WNDCLASSA structure
@@ -187,8 +189,8 @@ WinMain:
     movq %rax, wc+32(%rip)             # hIcon
 
     # Call LoadCursor(NULL, IDC_ARROW)
-    movq $0, %rcx                # NULL
-    movq $32512, %rdx            # IDC_ARROW = 32512
+    movq hInstance(%rip), %rcx                # NULL
+    leaq cursorName(%rip), %rdx            # IDC_ARROW = 32512
     call LoadCursorA
     _xd:
     movq %rax, wc+40(%rip)             # hCursor

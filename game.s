@@ -190,6 +190,7 @@ WinMain:
     movq $0, %rcx                # NULL
     movq $32512, %rdx            # IDC_ARROW = 32512
     call LoadCursorA
+    _xd:
     movq %rax, wc+40(%rip)             # hCursor
 
     # Call GetStockObject(BLACK_BRUSH)

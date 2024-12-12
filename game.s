@@ -33,7 +33,7 @@
 .extern GetStockObject
 .extern LoadCursorA
 
-.extern RegisterClass
+.extern RegisterClassA
 .extern CreateWindowExA
 .extern ShowCursor
 .extern ShowWindow
@@ -41,6 +41,8 @@
 .extern PeekMessageA
 .extern TranslateMessage
 .extern DispatchMessageA
+
+.extern LoadImageA
 
 .extern GetLastError
 
@@ -94,7 +96,7 @@ MSG:
 szClassName:
     .asciz "MyWindowClass"   # Class name as a null-terminated string
 iconName:
-    .asciz "IDI_MYICON"
+    .asciz "IDI_APPLICATION"
 cursorName:
     .asciz "IDC_ARROW"
 
@@ -117,6 +119,9 @@ cursorName:
 //#################################################################################
 .equ WM_QUIT, 0x0012
 .equ BLACK_BRUSH, 4 
+.equ IMAGE_BITMAP, 0
+.equ IMAGE_ICON, 1
+.equ IMAGE_CURSOR, 2
 
 //#################################################################################
 //#################################################################################
@@ -183,18 +188,30 @@ WinMain:
     movq %rax, wc+24(%rip)
 
     # Call LoadIcon(hInst, IDI_ICON)
-    movq hInstance(%rip), %rcx       # hInst (first argument)
+    xor %rcx, %rcx       # hInst (first argument), null for predefined images and resources
     leaq iconName(%rip), %rdx              # IDI_ICON (second argument, exinoample ID)
-    call LoadIconA
+    sub $40, %rsp
+    call LoadImageA
+    add $40, %rsp
     movq %rax, wc+32(%rip)             # hIcon
-
+    
     # Call LoadCursor(NULL, IDC_ARROW)
-    movq hInstance(%rip), %rcx                # NULL
-    leaq cursorName(%rip), %rdx            # IDC_ARROW = 32512
-    call LoadCursorA
+    xor %rcx, %rcx                # NULL
+    #leaq cursorName(%rip), %rdx
+    movq $32512, %rdx
+    mov $IMAGE_CURSOR, %r8     #uint type
+    xor %r9, %r9    #int cx
+    _xd1:
+    push $0
+    push $0
+    sub $40, %rsp
+    call LoadImageA
+    call GetLastError
     _xd:
+    add $40, %rsp
+    
     movq %rax, wc+40(%rip)             # hCursor
-
+    
     # Call GetStockObject(BLACK_BRUSH)
     movl $4, %ecx                # BLACK_BRUSH = 4
     call GetStockObject
@@ -214,7 +231,9 @@ WinMain:
     #WNDCLASSA SETUP END
     ###############################
     leaq wc(%rip), %rcx
-    call RegisterClassExA #REGISTER wc
+    sub $40, %rsp
+    call RegisterClassA #REGISTER wc
+    add $40, %rsp
 
     ###############################
     #Create the main screen

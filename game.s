@@ -98,7 +98,7 @@ szClassName:
 iconName:
     .asciz "IDI_APPLICATION"
 cursorName:
-    .asciz "IDC_ARROW"
+    .asciz "#32512"
 
     .section .bss
     .lcomm wc, 80            # Allocate 80 bytes for the WNDCLASSA structure
@@ -118,10 +118,17 @@ cursorName:
 //#################################################################################
 //#################################################################################
 .equ WM_QUIT, 0x0012
+
 .equ BLACK_BRUSH, 4 
+
 .equ IMAGE_BITMAP, 0
 .equ IMAGE_ICON, 1
 .equ IMAGE_CURSOR, 2
+
+.equ LR_SHARED, 32768
+
+.equ IDI_APPLICATION, 32512
+.equ IDC_ARROW, 32512
 
 //#################################################################################
 //#################################################################################
@@ -188,28 +195,28 @@ WinMain:
     movq %rax, wc+24(%rip)
 
     # Call LoadIcon(hInst, IDI_ICON)
-    xor %rcx, %rcx       # hInst (first argument), null for predefined images and resources
-    leaq iconName(%rip), %rdx              # IDI_ICON (second argument, exinoample ID)
-    sub $40, %rsp
+    xor %rcx, %rcx                # NULL
+    movq $IDI_APPLICATION, %rdx
+    mov $IMAGE_ICON, %r8     #uint type
+    xor %r9, %r9    #int cx
+    push $LR_SHARED
+    push $0
+    sub $32, %rsp
     call LoadImageA
-    add $40, %rsp
+    add $32, %rsp
+    _xd:
     movq %rax, wc+32(%rip)             # hIcon
     
     # Call LoadCursor(NULL, IDC_ARROW)
     xor %rcx, %rcx                # NULL
-    #leaq cursorName(%rip), %rdx
-    movq $32512, %rdx
+    movq $IDC_ARROW, %rdx
     mov $IMAGE_CURSOR, %r8     #uint type
     xor %r9, %r9    #int cx
-    _xd1:
+    push $LR_SHARED
     push $0
-    push $0
-    sub $40, %rsp
+    sub $32, %rsp
     call LoadImageA
-    call GetLastError
-    _xd:
-    add $40, %rsp
-    
+    add $32, %rsp
     movq %rax, wc+40(%rip)             # hCursor
     
     # Call GetStockObject(BLACK_BRUSH)

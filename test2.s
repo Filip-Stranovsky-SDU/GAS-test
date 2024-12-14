@@ -1,33 +1,59 @@
 	.file	"test2.c"
-	.text
+
 	.section .rdata,"dr"
 .LC0:
-	.ascii "#32512\0"
+	.ascii "MyClass\0"
+.LC1:
+	.ascii "My Window\0"
 	.text
-	.globl	main
-	.def	main;	.scl	2;	.type	32;	.endef
-	.seh_proc	main
-main:
+plem:
 	pushq	%rbp
-	.seh_pushreg	%rbp
 	movq	%rsp, %rbp
-	.seh_setframe	%rbp, 0
-	subq	$48, %rsp
-	.seh_stackalloc	48
-	.seh_endprologue
-	call	__main
-	movl	$32768, 40(%rsp)
-	movl	$0, 32(%rsp)
-	movl	$0, %r9d
-	movl	$2, %r8d
+	subq	$192, %rsp
+
+	movl	$0, %ecx
+	movq	__imp_GetModuleHandleA(%rip), %rax
+	call	*%rax
+
+	movq	%rax, -8(%rbp)
+	
+	pxor	%xmm0, %xmm0
+	movups	%xmm0, -96(%rbp)
+	movups	%xmm0, -80(%rbp)
+	movups	%xmm0, -64(%rbp)
+	movups	%xmm0, -48(%rbp)
+	movq	%xmm0, -32(%rbp)
+	
+	movq	__imp_DefWindowProcA(%rip), %rax
+	movq	%rax, -88(%rbp)
+	movq	-8(%rbp), %rax
+	movq	%rax, -72(%rbp)
+	leaq	.LC0(%rip), %rax
+	movq	%rax, -32(%rbp)
+	leaq	-96(%rbp), %rax
+	movq	%rax, %rcx
+	movq	__imp_RegisterClassA(%rip), %rax
+	call	*%rax
+	movq	$0, 88(%rsp)
+	movq	-8(%rbp), %rax
+	movq	%rax, 80(%rsp)
+	movq	$0, 72(%rsp)
+	movq	$0, 64(%rsp)
+	movl	$480, 56(%rsp)
+	movl	$640, 48(%rsp)
+	movl	$-2147483648, 40(%rsp)
+	movl	$-2147483648, 32(%rsp)
+	movl	$13565952, %r9d
+	leaq	.LC1(%rip), %r8
 	leaq	.LC0(%rip), %rax
 	movq	%rax, %rdx
 	movl	$0, %ecx
-	movq	__imp_LoadImageA(%rip), %rax
+	movq	__imp_CreateWindowExA(%rip), %rax
 	call	*%rax
-	addq	$48, %rsp
+	movq	%rax, -16(%rbp)
+	movl	$0, %eax
+	addq	$192, %rsp
 	popq	%rbp
 	ret
 	.seh_endproc
-	.def	__main;	.scl	2;	.type	32;	.endef
 	.ident	"GCC: (Rev2, Built by MSYS2 project) 14.2.0"

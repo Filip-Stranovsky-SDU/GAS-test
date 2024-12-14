@@ -95,10 +95,8 @@ MSG:
 
 szClassName:
     .asciz "MyWindowClass"   # Class name as a null-terminated string
-iconName:
-    .asciz "IDI_APPLICATION"
-cursorName:
-    .asciz "#32512"
+szDisplayName:
+    .asciz "MyDisplayClass"
 
     .section .bss
     .lcomm wc, 80            # Allocate 80 bytes for the WNDCLASSA structure
@@ -129,6 +127,8 @@ cursorName:
 
 .equ IDI_APPLICATION, 32512
 .equ IDC_ARROW, 32512
+
+.equ SW_SHOWDEFAULT, 10
 
 //#################################################################################
 //#################################################################################
@@ -204,7 +204,6 @@ WinMain:
     sub $32, %rsp
     call LoadImageA
     add $32, %rsp
-    _xd:
     movq %rax, wc+32(%rip)             # hIcon
     
     # Call LoadCursor(NULL, IDC_ARROW)
@@ -245,22 +244,25 @@ WinMain:
     ###############################
     #Create the main screen
     ###############################
+    sub $8, %rsp #16-byte stack allignment first, then parameters, then shadowspace, then call XD
 
-    movl $0x00040000L, %ecx    #DWORD dwExStyle
+
+    movl $0, %ecx    #DWORD dwExStyle
     leaq szClassName(%rip), %rdx    #LPCSTR lpClassName
-    movq $0, %r8    #LPCSTR lpWindowName
-    movq $1, %r9    #DWORD dwStyle
-    push $0    #int X
-    push $0    #int Y
-    push $640  #int nWidth
-    push $480  #int nHeight
+    leaq szDisplayName(%rip), %r8    #LPCSTR lpWindowName
+    movq $13565952, %r9    #DWORD dwStyle
+    push $0
+    movq hInstance(%rip), %rax
+    push %rax
+
+    push $0
+    push $0
+    pushq $480
+    pushq $640
     pushq $0
-    pushq $0
-    leaq hInstance(%rip), %rax
-    pushq %rax
     pushq $0
 
-    subq $40, %rsp
+    subq $32, %rsp
     call CreateWindowExA
     add $40, %rsp
 
@@ -271,10 +273,11 @@ WinMain:
     call ShowCursor
     add $40, %rsp
 
-    leaq hMainWnd(%rip), %rcx
-    movl nCmdShow(%rip), %edx
+    movq hMainWnd(%rip), %rcx
+    movl $SW_SHOWDEFAULT, %edx
     subq $40, %rsp
     call ShowWindow
+    call GetLastError
     add $40, %rsp
 
     call Game_Init ## CUSTOM GAME INIT, not win32
@@ -366,7 +369,7 @@ WndProc:
 //########################################################################
     .global Game_Init
 Game_Init:
-    xor %rax, %rax
+    mov $1, %rax
     ret
 //########################################################################
 // END Game_Init

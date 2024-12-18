@@ -46,7 +46,9 @@
 
 .extern GetLastError
 
-
+.extern DefWindowProcA
+.extern PostQuitMessage
+.extern GetMessageA
 
 
 //#################################################################################
@@ -116,6 +118,8 @@ szDisplayName:
 //#################################################################################
 //#################################################################################
 .equ WM_QUIT, 0x0012
+.equ WM_PAINT, 15
+.equ WM_DESTROY, 2
 
 .equ BLACK_BRUSH, 4 
 
@@ -264,11 +268,12 @@ WinMain:
 
     subq $32, %rsp
     call CreateWindowExA
+    _xd:
     add $40, %rsp
 
     mov %rax, hMainWnd(%rip)
 
-    movq $0, %rcx
+    movq $1, %rcx
     subq $40, %rsp
     call ShowCursor
     add $40, %rsp
@@ -277,7 +282,6 @@ WinMain:
     movl $SW_SHOWDEFAULT, %edx
     subq $40, %rsp
     call ShowWindow
-    call GetLastError
     add $40, %rsp
 
     call Game_Init ## CUSTOM GAME INIT, not win32
@@ -294,22 +298,32 @@ WinMain:
         movl $0, %edx
         movl $0, %r8d
         movl $0, %r9d
-        push $0x001
 
-        call PeekMessageA
+        sub $32, %rsp
+        _xd3:
+        call GetMessageA
+        _xd2:
+        add $32, %rsp
 
         cmp $0, %eax
-        jz _after1if
+        je _getout
+
+        movq MSG(%rip), %rax
+        cmp $0, %rax
+        je _after1if
+
         
         movl MSG+8(%rip), %eax
-        cmp WM_QUIT(%rip), %eax
+        cmp $WM_QUIT, %eax
         je _shutdown
     
     
         leaq MSG(%rip), %rcx
+        sub $32, %rsp
         call TranslateMessage
         leaq MSG(%rip), %rcx
         call DispatchMessageA
+        add $32, %rsp
 
     _after1if:
 
@@ -330,7 +344,7 @@ WinMain:
 
 _shutdown:
     call Game_Shutdown
-    mov $1, %rcx
+    mov $0, %rcx
     call ShowCursor
 _getout:
     mov $0, %rax ##TODO: msg.wParam
@@ -349,6 +363,41 @@ _getout:
 
 .global WndProc
 WndProc:
+    push %rbp
+    mov %rsp, %rbp
+
+    cmp $WM_DESTROY, %rdx
+    jne _notQuit
+    xor %rcx, %rcx
+    sub $32, %rsp
+    call PostQuitMessage
+    add $32, %rsp
+    
+    mov %rbp, %rsp
+    pop %rbp
+    xor %rax, %rax
+    ret
+    
+    _notQuit:
+    cmp $WM_PAINT, %rdx
+    jne _notPaint
+
+    ## PAINT START
+    mov %rbp, %rsp
+    pop %rbp
+    xor %rax, %rax
+    ret
+
+    ##PAINT END
+    _notPaint:
+
+
+
+    sub $32, %rsp
+    call DefWindowProcA
+    add $32, %rsp
+
+    pop %rbp
     ret
 //########################################################################
 // End of Main Windows Callback Procedure
@@ -369,7 +418,7 @@ WndProc:
 //########################################################################
     .global Game_Init
 Game_Init:
-    mov $1, %rax
+    mov $0, %rax
     ret
 //########################################################################
 // END Game_Init

@@ -50,6 +50,10 @@
 .extern PostQuitMessage
 .extern GetMessageA
 
+.extern BeginPaint
+.extern EndPaint
+.extern FillRect
+
 
 //#################################################################################
 //#################################################################################
@@ -120,6 +124,9 @@ szDisplayName:
 .equ WM_QUIT, 0x0012
 .equ WM_PAINT, 15
 .equ WM_DESTROY, 2
+.equ WM_KEYDOWN, 256
+.equ WM_KEYUP, 257
+
 
 .equ BLACK_BRUSH, 4 
 
@@ -268,7 +275,6 @@ WinMain:
 
     subq $32, %rsp
     call CreateWindowExA
-    _xd:
     add $40, %rsp
 
     mov %rax, hMainWnd(%rip)
@@ -300,9 +306,7 @@ WinMain:
         movl $0, %r9d
 
         sub $32, %rsp
-        _xd3:
         call GetMessageA
-        _xd2:
         add $32, %rsp
 
         cmp $0, %eax
@@ -366,6 +370,11 @@ WndProc:
     push %rbp
     mov %rsp, %rbp
 
+    movq	%rcx, 16(%rbp)
+	movl	%edx, 24(%rbp)
+	movq	%r8, 32(%rbp)
+	movq	%r9, 40(%rbp)
+
     cmp $WM_DESTROY, %rdx
     jne _notQuit
     xor %rcx, %rcx
@@ -383,6 +392,37 @@ WndProc:
     jne _notPaint
 
     ## PAINT START
+
+    sub $80, %rsp   #ROOM for PAINTSTRUCT(80 bytes)   
+    
+    
+
+
+    movq 16(%rbp), %rcx #HWND
+    leaq -80(%rbp), %rdx #PAINTSTRUCT POINTER
+    subq $32, %rsp
+    call BeginPaint
+    addq $32, %rsp
+    _xd1:
+    movl $5, -64(%rbp)
+    movl $5, -60(%rbp)
+    movl $200, -56(%rbp)
+    movl $100, -52(%rbp)
+
+    movq %rax, %rcx #HDC hDC
+    leaq -64(%rbp), %rdx #RECT *lprc
+    movq $6, %r8 
+    //movq $6, %r9
+    subq $32, %rsp
+    call FillRect
+    addq $32, %rsp
+
+    movq 16(%rbp), %rcx
+    leaq 80(%rbp), %rdx
+    subq $32, %rsp
+    call EndPaint
+    addq $32, %rsp
+
     mov %rbp, %rsp
     pop %rbp
     xor %rax, %rax
@@ -391,6 +431,9 @@ WndProc:
     ##PAINT END
     _notPaint:
 
+    ## INPUT START
+
+    cmp $
 
 
     sub $32, %rsp

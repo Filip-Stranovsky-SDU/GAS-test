@@ -16,6 +16,13 @@ int main(){
     std::cout << WM_KEYDOWN << "\n";
     std::cout << WM_KEYUP << "\n";
     
+    
+    std::cout << "\n";
+    std::cout << VK_LEFT << "\n";
+    std::cout << VK_RIGHT << "\n";
+    std::cout << VK_UP << "\n";
+    std::cout << VK_DOWN << "\n";
+
     std::cout << "XD\n";
 
     //std::cout << (HBRUSH);

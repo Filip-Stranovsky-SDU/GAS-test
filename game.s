@@ -104,6 +104,9 @@ szClassName:
 szDisplayName:
     .asciz "MyDisplayClass"
 
+positionX:
+    .long 5
+
     .section .bss
     .lcomm wc, 80            # Allocate 80 bytes for the WNDCLASSA structure
 
@@ -140,6 +143,12 @@ szDisplayName:
 .equ IDC_ARROW, 32512
 
 .equ SW_SHOWDEFAULT, 10
+
+.equ VK_LEFT, 37
+.equ VK_UP, 38
+.equ VK_RIGHT, 39
+.equ VK_DOWN, 40
+
 
 //#################################################################################
 //#################################################################################
@@ -377,63 +386,92 @@ WndProc:
 
     cmp $WM_DESTROY, %rdx
     jne _notQuit
-    xor %rcx, %rcx
-    sub $32, %rsp
-    call PostQuitMessage
-    add $32, %rsp
-    
-    mov %rbp, %rsp
-    pop %rbp
-    xor %rax, %rax
-    ret
+        ## QUIT BEGIN
+        xor %rcx, %rcx
+        sub $32, %rsp
+        call PostQuitMessage
+        add $32, %rsp
+        
+        mov %rbp, %rsp
+        pop %rbp
+        xor %rax, %rax
+        ret
+        ## QUIT END
     
     _notQuit:
     cmp $WM_PAINT, %rdx
     jne _notPaint
 
-    ## PAINT START
+        ## PAINT START
 
-    sub $80, %rsp   #ROOM for PAINTSTRUCT(80 bytes)   
-    
-    
+        sub $80, %rsp   #ROOM for PAINTSTRUCT(80 bytes)   
+        
+        
 
 
-    movq 16(%rbp), %rcx #HWND
-    leaq -80(%rbp), %rdx #PAINTSTRUCT POINTER
-    subq $32, %rsp
-    call BeginPaint
-    addq $32, %rsp
-    _xd1:
-    movl $5, -64(%rbp)
-    movl $5, -60(%rbp)
-    movl $200, -56(%rbp)
-    movl $100, -52(%rbp)
+        movq 16(%rbp), %rcx #HWND
+        leaq -80(%rbp), %rdx #PAINTSTRUCT POINTER
+        subq $32, %rsp
+        call BeginPaint
+        addq $32, %rsp
+        _xd1:
+        movl positionX(%rip), %ecx
+        movl %ecx, -64(%rbp)
+        movl $5, -60(%rbp)
+        add $95, %ecx
+        movl %ecx, -56(%rbp)
+        movl $100, -52(%rbp)
 
-    movq %rax, %rcx #HDC hDC
-    leaq -64(%rbp), %rdx #RECT *lprc
-    movq $6, %r8 
-    //movq $6, %r9
-    subq $32, %rsp
-    call FillRect
-    addq $32, %rsp
+        movq %rax, %rcx #HDC hDC
+        leaq -64(%rbp), %rdx #RECT *lprc
+        movq $6, %r8
+        //movq $6, %r9
+        subq $32, %rsp
+        call FillRect
+        addq $32, %rsp
 
-    movq 16(%rbp), %rcx
-    leaq 80(%rbp), %rdx
-    subq $32, %rsp
-    call EndPaint
-    addq $32, %rsp
+        movq 16(%rbp), %rcx
+        leaq 80(%rbp), %rdx
+        subq $32, %rsp
+        call EndPaint
+        addq $32, %rsp
 
-    mov %rbp, %rsp
-    pop %rbp
-    xor %rax, %rax
-    ret
+        mov %rbp, %rsp
+        pop %rbp
+        xor %rax, %rax
+        ret
 
-    ##PAINT END
+        ##PAINT END
     _notPaint:
 
-    ## INPUT START
+        ## INPUT START
 
-    cmp $
+        cmp $WM_KEYDOWN, %rdx
+        jne _notKeyDown
+            ## KEY DOWN BEGIN
+            movq 32(%rbp), %r8
+            cmp $VK_RIGHT, %r8
+            jne _notRight
+                movl positionX(%rip), %eax
+                add $50, %eax
+                movl %eax, positionX(%rip)
+                
+
+            _notRight:
+            
+
+            ## KEY DOWN END
+        _notKeyDown:
+        
+        cmp $WM_KEYUP, %rdx
+        jne _notKeyUp
+            ## KEY UP BEGIN
+
+            ## KEY UP END
+        _notKeyUp:
+
+        ## INPUT END
+
 
 
     sub $32, %rsp
